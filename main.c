@@ -180,10 +180,21 @@ bool can_horse_move(pos act, pos des, int board[8][8])
     int delta_x = abs(act.x - des.x);
     int delta_y = abs(act.y - des.y);
 
-    if((delta_x+delta_y) == 3) return true; //pitagoras teorem
-
+    if(((delta_x*delta_x)+(delta_y*delta_y)) == 5) return true; //pitagoras teorem
+    
     return false;
 }
+
+/* bool can_bishop_move(pos act, pos des, int board[8][8])
+{
+    if(board[des.x][des.y] != NO_PIECE)
+        return false;
+
+    int delta_x = abs(act.x - des.x);
+    int delta_y = abs(act.y - des.y);
+
+    if((delta_x+delta_y) == 3) return true; //pitagoras teorem
+} */
 
 bool handle_move(pos actual, pos desired, int board[8][8], piece_code_t PIECE_CODE, piece_code_t TEAM_CODE)
 {
