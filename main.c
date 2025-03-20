@@ -119,16 +119,25 @@ void move_piece(pos actual, pos desired, int board[8][8], piece_code_t PIECE_COD
 
 bool can_pawn_move(pos actual, pos desired, int board[8][8], int team_code)
 {
+    puts("can_pawn_move acessed");
     if(board[desired.x][desired.y] != NO_PIECE  || desired.y != actual.y || abs(desired.x - actual.x) > 2)
         return false;
 
-    if(team_code == B_CODE && actual.x == 1 && desired.x - actual.x >= 1)
-        return true;
+    if(team_code == B_CODE && desired.x - actual.x < 0) 
+        return false;
+
+    if(team_code == W_CODE && actual.x - desired.x < 0 )
+        return false;
+
+    if(team_code == B_CODE && actual.x != 1 && abs(desired.x - actual.x) >= 2 )
+        return false;
+        
+    if(team_code == W_CODE && actual.x != 6 && abs(desired.x - actual.x) >= 2 ) 
+        return false;
+
     
-    if(team_code == W_CODE && actual.x == 6 && actual.x - desired.x > 0)
-        return true;
     
-    return false;
+    return true;
 }
 
 bool can_tower_move(pos actual, pos desired, int board[8][8], piece_code_t TEAM_CODE)
@@ -197,12 +206,13 @@ bool can_bishop_move(pos act, pos des, int board[8][8])
     //check if the diagonal choosed is availabe
     int iter_x = 0;
     int iter_y = 0;
-    puts("//check if the diagonal choosed is availabe")
-/* WIP -  WORK IN PROGRESS HERE, I'M WRITING THIS DEBUGGINS PRITNS AND TESTING THIS FUNCTION' */    
-    for( i = 1; i < abs(delta_y); ++i )
+    puts("//check if the diagonal choosed is availabe");
+    /* WIP -  WORK IN PROGRESS HERE, I'M WRITING THIS DEBUGGINS PRITNS AND TESTING THIS FUNCTION' */    
+    for(int i = 1; i < abs(delta_y); ++i )
     {
-        iter_x += delta_x>0?1:-1;
-        iter_y += delta_y>0?1:-1;
+        iter_x += delta_x<0?1:-1;
+        iter_y += delta_y<0?1:-1;
+        printf("checking x= %d, y= %d\n",act.x + iter_x ,act.y + iter_y );
         if( board[act.x + iter_x][act.y + iter_y] != NO_PIECE) return false;
     }
     
