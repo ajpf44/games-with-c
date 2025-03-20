@@ -119,7 +119,6 @@ void move_piece(pos actual, pos desired, int board[8][8], piece_code_t PIECE_COD
 
 bool can_pawn_move(pos actual, pos desired, int board[8][8], int team_code)
 {
-    puts("maneging with the pawn can move");
     if(board[desired.x][desired.y] != NO_PIECE  || desired.y != actual.y || abs(desired.x - actual.x) > 2)
         return false;
 
@@ -185,19 +184,36 @@ bool can_horse_move(pos act, pos des, int board[8][8])
     return false;
 }
 
-/* bool can_bishop_move(pos act, pos des, int board[8][8])
+bool can_bishop_move(pos act, pos des, int board[8][8])
 {
     if(board[des.x][des.y] != NO_PIECE)
         return false;
 
-    int delta_x = abs(act.x - des.x);
-    int delta_y = abs(act.y - des.y);
+    int delta_x = act.x - des.x;
+    int delta_y = act.y - des.y;
+    //move only in diagonally
+    if(abs(delta_y) != abs(delta_x)) return false; 
 
-    if((delta_x+delta_y) == 3) return true; //pitagoras teorem
-} */
+    //check if the diagonal choosed is availabe
+    int iter_x = 0;
+    int iter_y = 0;
+    puts("//check if the diagonal choosed is availabe")
+/* WIP -  WORK IN PROGRESS HERE, I'M WRITING THIS DEBUGGINS PRITNS AND TESTING THIS FUNCTION' */    
+    for( i = 1; i < abs(delta_y); ++i )
+    {
+        iter_x += delta_x>0?1:-1;
+        iter_y += delta_y>0?1:-1;
+        if( board[act.x + iter_x][act.y + iter_y] != NO_PIECE) return false;
+    }
+    
+
+    return true;
+}
 
 bool handle_move(pos actual, pos desired, int board[8][8], piece_code_t PIECE_CODE, piece_code_t TEAM_CODE)
 {
+
+    /* debug prints  */    
     printf("the piece_code, on handle move function: %d\n", PIECE_CODE);
     printf("piece: x = %d, y = %d\n",actual.x, actual.y);
     printf("desired: x = %d, y = %d\n",desired.x, desired.y);
@@ -221,6 +237,13 @@ bool handle_move(pos actual, pos desired, int board[8][8], piece_code_t PIECE_CO
             break;
         case B_HORSE:case W_HORSE:
             if(can_horse_move(actual, desired, board))
+            {
+                move_piece(actual, desired, board, PIECE_CODE);
+                return true;
+            }
+            break;
+        case B_BISHOP:case W_BISHOP:
+            if(can_bishop_move(actual, desired, board))
             {
                 move_piece(actual, desired, board, PIECE_CODE);
                 return true;
