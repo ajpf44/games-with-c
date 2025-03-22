@@ -10,7 +10,8 @@ typedef enum
 {
     NO_PIECE = 0,
     
-    B_CODE=0,
+    B_CODE=-1,
+    
     B_PAWN=1,
     B_TOWER=2,
     B_HORSE=3,
@@ -18,7 +19,8 @@ typedef enum
     B_KING=5,
     B_QUEEN=6,
 
-    W_CODE = 1,
+    W_CODE = -2,
+    
     W_PAWN = 10,
     W_TOWER = 20,
     W_HORSE = 30,
@@ -26,6 +28,59 @@ typedef enum
     W_KING = 50,
     W_QUEEN = 60
 } piece_code_t;
+
+int main (int argc, char** argv)
+{
+    void output_board(int board[8][8]);
+    bool can_move(pos actual, pos desired, int board[8][8], piece_code_t PIECE_CODE, piece_code_t TEAM_CODE);
+    void set_board_init_pices(int board[8][8]);
+    void move_piece(pos actual, pos desired, int board[8][8], piece_code_t PIECE_CODE);
+
+	puts("ajpf's chess, version 0.1");
+
+	int board[8][8];
+
+	set_board_init_pices(board);
+
+    //to be easir to test
+	board [6][0] = NO_PIECE;
+	board [6][3] = NO_PIECE;
+	board [6][4] = NO_PIECE;
+	board [6][5] = NO_PIECE;
+	
+	board [1][3] = NO_PIECE;
+	board [1][4] = NO_PIECE;
+	board [1][5] = NO_PIECE;
+	bool is_player1_round = true;
+
+    while(1)
+    {    
+        output_board(board);
+        
+        pos piece;
+        pos desired;
+        
+        printf("%s piece: ", is_player1_round?"p1":"p2");
+        scanf("%d-%d", &piece.x, &piece.y);
+        printf("%s desired: ", is_player1_round?"p1":"p2");
+        scanf("%d-%d", &desired.x, &desired.y);
+
+        bool can_piece_move = can_move(piece, desired, board, board[piece.x][piece.y], is_player1_round?W_CODE:B_CODE);
+
+        if(can_piece_move)
+        {
+            puts("moving");
+            move_piece(piece, desired, board, board[piece.x][piece.y]);;
+            // is_player1_round = !is_player1_round;
+        }
+        else
+            puts("cannot move");
+        puts("##################################");
+    }
+
+    output_board(board);
+	return 0;
+}
 
 void set_board_init_pices(int board[8][8])
 {
@@ -64,47 +119,6 @@ void set_board_init_pices(int board[8][8])
 		}
 	}
 }
-
-
-int main (int argc, char** argv)
-{
-    void output_board(int board[8][8]);
-    bool handle_move(pos actual, pos desired, int board[8][8], piece_code_t PIECE_CODE, piece_code_t TEAM_CODE);
-
-	puts("ajpf's chess, version 0.1");
-
-	int board[8][8];
-
-	set_board_init_pices(board);
-
-	board [6][0] = NO_PIECE;
-	bool is_player1_round = true;
-
-    while(1)
-    {    
-        output_board(board);
-        pos piece;
-        pos desired;
-        printf("%s piece: ", is_player1_round?"p1":"p2");
-        scanf("%d-%d", &piece.x, &piece.y);
-        printf("%s desired: ", is_player1_round?"p1":"p2");
-        scanf("%d-%d", &desired.x, &desired.y);
-
-        bool moved = handle_move(piece, desired, board, board[piece.x][piece.y], is_player1_round?W_CODE:B_CODE);
-
-        if(moved)
-        {
-            puts("moving");
-            // is_player1_round = !is_player1_round;
-        }
-        else
-            puts("cannot move");
-        puts("##################################");
-    }
-
-    output_board(board);
-	return 0;
-}
 int abs(int x)
 {
     if(x < 0) return (-1)*x;
@@ -134,19 +148,17 @@ bool can_pawn_move(pos actual, pos desired, int board[8][8], int team_code)
         
     if(team_code == W_CODE && actual.x != 6 && abs(desired.x - actual.x) >= 2 ) 
         return false;
-
-    
-    
+        
     return true;
 }
 
-bool can_tower_move(pos actual, pos desired, int board[8][8], piece_code_t TEAM_CODE)
+bool can_tower_move(pos actual, pos desired, int board[8][8])
 {
+    //only can move to free space rule
+    if( board[desired.x][desired.y] != NO_PIECE) return false;
+    
     //only can move in lines rule
     if ( desired.x != actual.x && desired.y != actual.y) return false;
-
-    //only can move in lines rule to free space rule
-    if( board[desired.x][desired.y] != NO_PIECE) return false;
     
     //only can move in lines that is free
     if(desired.x == actual.x)
@@ -182,6 +194,7 @@ bool can_tower_move(pos actual, pos desired, int board[8][8], piece_code_t TEAM_
 
 bool can_horse_move(pos act, pos des, int board[8][8])
 {
+    //only can move to free space rule
     if(board[des.x][des.y] != NO_PIECE)
         return false;
 
@@ -195,6 +208,7 @@ bool can_horse_move(pos act, pos des, int board[8][8])
 
 bool can_bishop_move(pos act, pos des, int board[8][8])
 {
+    //only can move to free space rule
     if(board[des.x][des.y] != NO_PIECE)
         return false;
 
@@ -207,7 +221,6 @@ bool can_bishop_move(pos act, pos des, int board[8][8])
     int iter_x = 0;
     int iter_y = 0;
     puts("//check if the diagonal choosed is availabe");
-    /* WIP -  WORK IN PROGRESS HERE, I'M WRITING THIS DEBUGGINS PRITNS AND TESTING THIS FUNCTION' */    
     for(int i = 1; i < abs(delta_y); ++i )
     {
         iter_x += delta_x<0?1:-1;
@@ -220,7 +233,35 @@ bool can_bishop_move(pos act, pos des, int board[8][8])
     return true;
 }
 
-bool handle_move(pos actual, pos desired, int board[8][8], piece_code_t PIECE_CODE, piece_code_t TEAM_CODE)
+bool can_queen_move(pos act, pos des, int board[8][8])
+{
+    //it's simple, the queen has bishop+tower movement, so the veryfing relly on that fact
+    if(can_bishop_move(act, des, board) || can_tower_move(act, des, board))
+        return true;
+        
+    return false;
+}
+
+bool can_king_move(pos act, pos des, int board[8][8])
+{
+    //i'm not checking check limiters right now
+
+    //only can move to free space rule
+    if(board[des.x][des.y] != NO_PIECE)
+        return false;
+
+    //can only move one space, don't matter the direction
+    int abs_delta_x = abs(act.x - des.x);
+    int abs_delta_y = abs(act.y - des.y);
+
+    //WIP - there's a bug here checkout later
+    if( (abs_delta_x + abs_delta_y) <= 1 )
+        return true;
+
+    return false;
+}
+
+bool can_move(pos actual, pos desired, int board[8][8], piece_code_t PIECE_CODE, piece_code_t TEAM_CODE)
 {
 
     /* debug prints  */    
@@ -233,41 +274,35 @@ bool handle_move(pos actual, pos desired, int board[8][8], piece_code_t PIECE_CO
     {
         case B_PAWN:case W_PAWN:
             if(can_pawn_move(actual, desired, board, TEAM_CODE))
-            {
-                move_piece(actual, desired, board, PIECE_CODE);
                 return true;
-            }
             break;
         case B_TOWER:case W_TOWER:
-            if(can_tower_move(actual, desired, board, TEAM_CODE))
-            {
-                move_piece(actual, desired, board, PIECE_CODE);
+            if(can_tower_move(actual, desired, board))
                 return true;
-            }
             break;
         case B_HORSE:case W_HORSE:
             if(can_horse_move(actual, desired, board))
-            {
-                move_piece(actual, desired, board, PIECE_CODE);
                 return true;
-            }
             break;
         case B_BISHOP:case W_BISHOP:
             if(can_bishop_move(actual, desired, board))
-            {
-                move_piece(actual, desired, board, PIECE_CODE);
                 return true;
-            }
+            break;
+        case B_QUEEN:case W_QUEEN:
+            if(can_queen_move(actual, desired, board))
+                return true;
+            break;
+        case B_KING:case W_KING:
+            if(can_king_move(actual, desired, board))
+                return true;
             break;
         default:
-            puts("this piece is no available for handling move yet");
+            puts("this piece is no available for handling move");
             break;
     }
 
     return false;
 }
-
-
 
 void output_board(int board[8][8])
 {
