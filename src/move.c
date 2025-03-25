@@ -1,142 +1,10 @@
-#include <stdio.h>
-#include <stdbool.h>
+#include "move.h"
+#include "pieces.h"
+#include "utils.h"
 
-typedef struct{
-    int x;
-    int y;
-} pos;
-
-typedef enum 
-{
-    NO_PIECE = 0,
-    
-    B_CODE=-1,
-    
-    B_PAWN=1,
-    B_TOWER=2,
-    B_HORSE=3,
-    B_BISHOP=4,
-    B_KING=5,
-    B_QUEEN=6,
-
-    W_CODE = -2,
-    
-    W_PAWN = 10,
-    W_TOWER = 20,
-    W_HORSE = 30,
-    W_BISHOP = 40,
-    W_KING = 50,
-    W_QUEEN = 60
-} piece_code_t;
-
-typedef enum
-{
-    CANNOT_MOVE,
-    CAN_MOVE,
-    CAN_CAPTURE
-} move_result_t;
-
-int main (int argc, char** argv)
-{
-    void output_board(int board[8][8]);
-    move_result_t analize_move(pos actual, pos desired, int board[8][8], piece_code_t PIECE_CODE, piece_code_t TEAM_CODE);
-    void set_board_init_pices(int board[8][8]);
-    void move_piece(pos actual, pos desired, int board[8][8], piece_code_t PIECE_CODE);
-
-	puts("ajpf's chess, version 0.1");
-
-	int board[8][8];
-
-	set_board_init_pices(board);
-
-    //to be easir to test
-	board [6][0] = NO_PIECE;
-	board [6][3] = NO_PIECE;
-	board [6][4] = NO_PIECE;
-	board [6][5] = NO_PIECE;
-	
-	board [1][3] = NO_PIECE;
-	board [1][4] = NO_PIECE;
-	board [1][5] = NO_PIECE;
-	bool is_player1_round = true;
-
-    while(1)
-    {    
-        output_board(board);
-        
-        pos piece;
-        pos desired;
-        
-        printf("%s piece: ", is_player1_round?"p1":"p2");
-        scanf("%d-%d", &piece.x, &piece.y);
-        printf("%s desired: ", is_player1_round?"p1":"p2");
-        scanf("%d-%d", &desired.x, &desired.y);
-
-        move_result_t move_result = 
-            analize_move(piece, desired, board, board[piece.x][piece.y], is_player1_round?W_CODE:B_CODE);
-
-        if(move_result == CAN_MOVE)
-        {
-            puts("moving");
-            move_piece(piece, desired, board, board[piece.x][piece.y]);;
-            // is_player1_round = !is_player1_round;
-        }
-        else if(move_result == CAN_CAPTURE)
-        {
-            puts("capturing a piece");
-            move_piece(piece, desired, board, board[piece.x][piece.y]);
-        }
-        else
-            puts("cannot move");
-        puts("##################################");
-    }
-
-    output_board(board);
-	return 0;
-}
-
-void set_board_init_pices(int board[8][8])
-{
-    for(int i =0; i < 8; ++i)
-	{
-		for(int j =0; j < 8; ++j)
-		{
-			if (i ==0 || i == 7)
-			{
-				switch (j) 
-				{
-					case 0:case 7:
-						board[i][j] =  i==0?B_TOWER:W_TOWER;
-						break;
-					case 1:case 6:
-						board[i][j] = i==0?B_HORSE:W_HORSE;
-						break;
-					case 2:	case 5:
-						board[i][j] = i==0?B_BISHOP:W_BISHOP;
-						break;
-					case 3:
-						board[i][j] = i==0?B_KING:W_KING;
-						break;
-					case 4:
-						board[i][j] = i==0?B_QUEEN:W_QUEEN;
-						break;
-				}
-			}else if(i == 1 || i == 6)
-			{
-				board[i][j] = i==1?B_PAWN:W_PAWN;
-			}
-			else
-			{
-				board[i][j] = NO_PIECE;
-			}
-		}
-	}
-}
-int abs(int x)
-{
-    if(x < 0) return (-1)*x;
-    return x;
-}
+#define bool int
+#define true 1
+#define false 0
 
 void move_piece(pos actual, pos desired, int board[8][8], piece_code_t piece_code)
 {
@@ -233,7 +101,7 @@ move_result_t can_tower_move(pos actual, pos desired, int board[8][8], piece_cod
         {
             if(board[actual.x][i] != NO_PIECE)
             {
-                printf("\n  x: %d, y: %d, piece on spot: %d \n", actual.x, i, board[actual.x][i]);
+                // printf("\n  x: %d, y: %d, piece on spot: %d \n", actual.x, i, board[actual.x][i]);
                 return CANNOT_MOVE;
             }
         }
@@ -247,7 +115,7 @@ move_result_t can_tower_move(pos actual, pos desired, int board[8][8], piece_cod
         {
             if(board[i][actual.y] != NO_PIECE)
             {
-                printf("\nx: %d, y: %d, piece on spot: %d \n", i, actual.y, board[i][actual.y]);
+                // printf("\nx: %d, y: %d, piece on spot: %d \n", i, actual.y, board[i][actual.y]);
                 return CANNOT_MOVE;
             }
         }
@@ -295,12 +163,12 @@ move_result_t can_bishop_move(pos act, pos des, int board[8][8], piece_code_t te
     //check if the diagonal choosed is availabe
     int iter_x = 0;
     int iter_y = 0;
-    puts("//check if the diagonal choosed is availabe");
+    // puts("//check if the diagonal choosed is availabe");
     for(int i = 1; i < abs(delta_y); ++i )
     {
         iter_x += delta_x<0?1:-1;
         iter_y += delta_y<0?1:-1;
-        printf("checking x= %d, y= %d\n",act.x + iter_x ,act.y + iter_y );
+        // printf("checking x= %d, y= %d\n",act.x + iter_x ,act.y + iter_y );
         if( board[act.x + iter_x][act.y + iter_y] != NO_PIECE) 
             return CANNOT_MOVE;
     }
@@ -350,14 +218,13 @@ move_result_t can_king_move(pos act, pos des, int board[8][8], piece_code_t team
     return CAN_MOVE;
 }
 
-/* WIP: CHANGING THE RETURN TO MOVE RESULT */
 move_result_t analize_move(pos actual, pos desired, int board[8][8], piece_code_t PIECE_CODE, piece_code_t TEAM_CODE)
 {
     /* debug prints  */    
-    printf("the piece_code, on handle move function: %d\n", PIECE_CODE);
-    printf("piece: x = %d, y = %d\n",actual.x, actual.y);
-    printf("desired: x = %d, y = %d\n",desired.x, desired.y);
-    printf("piece_code: %d\n", PIECE_CODE);
+    // printf("the piece_code, on handle move function: %d\n", PIECE_CODE);
+    // printf("piece: x = %d, y = %d\n",actual.x, actual.y);
+    // printf("desired: x = %d, y = %d\n",desired.x, desired.y);
+    // printf("piece_code: %d\n", PIECE_CODE);
     
     switch (PIECE_CODE) 
     {
@@ -380,27 +247,9 @@ move_result_t analize_move(pos actual, pos desired, int board[8][8], piece_code_
             return can_king_move(actual, desired, board, TEAM_CODE);
             break;
         default:
-            puts("this piece is no available for handling move");
+            // puts("this piece is no available for handling move");
             break;
     }
 
     return CANNOT_MOVE;
 }
-void output_board(int board[8][8])
-{
-    printf("P1  ");
-    for( int i = 0;i  < 8; ++i)
-        printf("%2d ", i);
-    
-    printf("\n   -----------------------\n");
-    for( int i = 0;i  < 8; ++i)
-	{
-        printf("%d | ", i);
-		for(int j = 0; j < 8; ++j)
-		{
-			printf("%2d ", board[i][j]);
-		}
-		printf("\n");
-	}
-}
-
