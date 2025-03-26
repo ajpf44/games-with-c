@@ -16,6 +16,8 @@ typedef enum{
 int main (int argc, char** argv)
 {
     void set_board_init_pices(int board[8][8]);
+    pos scan_piece(player_round_t player, int board[8][8]);
+    pos scan_desired(player_round_t player, int board[8][8]);
 
 	puts("ajpf's chess, version 0.1");
 
@@ -23,37 +25,42 @@ int main (int argc, char** argv)
 
 	set_board_init_pices(board);
 
-	bool is_player1_round = true;
+	player_round_t player = PLAYER_1;
 
     while(1)
     {    
-        output_board(board);
-        
-        pos piece;
-        pos desired;
-        
-        printf("%s piece: ", is_player1_round?"p1":"p2");
-        scanf("%d-%d", &piece.x, &piece.y);
-        printf("%s desired: ", is_player1_round?"p1":"p2");
-        scanf("%d-%d", &desired.x, &desired.y);
+		output_board(board);
 		
-        move_result_t move_result = 
-            analize_move(piece, desired, board, board[piece.x][piece.y], is_player1_round?W_CODE:B_CODE);
+		pos piece = scan_piece(player, board);
+		pos desired = scan_desired(player, board);
+		
+		move_result_t move_result = 
+			analize_move(piece, desired, board, board[piece.x][piece.y], player==PLAYER_1?W_CODE:B_CODE);
 
-        if(move_result == CAN_MOVE)
-        {
-            puts("moving");
-            move_piece(piece, desired, board, board[piece.x][piece.y]);;
-            is_player1_round = !is_player1_round;
-        }
-        else if(move_result == CAN_CAPTURE)
-        {
-            puts("capturing a piece");
-            move_piece(piece, desired, board, board[piece.x][piece.y]);
-        }
-        else
-            puts("cannot move");
-        puts("##################################");
+		if(move_result == CAN_MOVE)
+		{
+			puts("moving");
+			move_piece(piece, desired, board, board[piece.x][piece.y]);;
+			player = player==PLAYER_1?PLAYER_2:PLAYER_1;
+		}
+		else if(move_result == CAN_CAPTURE)
+		{
+			puts("capturing a piece");
+
+			if(board[desired.x][desired.y] == W_KING || board[desired.x][desired.y] == B_KING)
+			{
+				char* winner = (player==PLAYER_1)?"Player_1":"Player_2";
+				printf("Victory from player %s", winner);
+				break;
+			}
+			
+			move_piece(piece, desired, board, board[piece.x][piece.y]);
+			player = player==PLAYER_1?PLAYER_2:PLAYER_1;
+		}
+		else
+			puts("cannot move\n");
+			
+		puts("##################################");
     }
 
     output_board(board);
@@ -61,16 +68,62 @@ int main (int argc, char** argv)
 }
 
 //WIP
-void get_piece_to_play(pos* des, player_round_t player, int board[8][8])
+
+bool is_invalid_piece(pos input, player_round_t player, int board[8][8], char** s)
+{
+	if(input.x > 7 || input.y> 7  ||  input.x < 0 || input.y < 0)
+	{
+		*s = "outbounds the board";
+		return true;
+	}
+
+	if( board[input.x][input.y] == NO_PIECE)
+	{
+		*s = "there is no piece to move";
+		return true;
+	}
+	
+    if ( 
+    	(player == PLAYER_1 && board[input.x][input.y] < W_PAWN) ||
+    	(player == PLAYER_2 && board[input.x][input.y] >= W_PAWN)
+    )
+    {
+		*s = "you cannot move that piece";
+		return true;
+    }
+
+    return false;
+}
+
+pos scan_desired(player_round_t player, int board[8][8])
+{
+	pos in;
+	printf("%s desired: ", player==PLAYER_1?"p1":"p2");
+    scanf("%d-%d", &in.x, &in.y);
+
+    if(in.x > 7 || in.y> 7  ||  in.x < 0 || in.y < 0)
+	{
+		puts("outbounds the board");
+		return scan_desired(player, board);
+	}
+
+	return in;
+}
+
+pos scan_piece(player_round_t player, int board[8][8])
 {
 	pos in;
 	printf("%s piece: ", player==PLAYER_1?"p1":"p2");
     scanf("%d-%d", &in.x, &in.y);
 
-    if ( player == PLAYER_1 && board[in.x][in.y] < W_PAWN)
+    char* err_msg;
+    if(is_invalid_piece(in, player, board, &err_msg))
     {
-    	// printf("")
+    	puts(err_msg);
+    	return scan_piece( player, board);
     }
+
+    return in;
 }
 
 void set_board_init_pices(int board[8][8])
