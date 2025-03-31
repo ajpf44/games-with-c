@@ -1,0 +1,16 @@
+# doc campo minado
+
+### tecnologias
+- C
+- Gtk
+
+### descrição
+simples campo minado em c, que dispõe pseudo-aleatoriamente as bombas. Com uma interface também simples.
+
+### lógica
+as bombas são geradas aleatoriamente
+as informações são armazenada em uma matrix de inteiros
+i == 0 é bomba
+i != 0 não é bomba, sendo i o número de bombas ao redor
+
+
