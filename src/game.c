@@ -100,10 +100,10 @@ void init_bombs(field_slot field[][FS])
 			field[i][j].is_revealed= false;
 			field[i][j].x = i;
 			field[i][j].y = j;
-			
-			int rand_num = rand() % 10;
+						
+			int rand_num = rand() % 5;
 			if(rand_num==0)
-				field[i][j].is_bomb = true;
+				field[i][j].is_bomb = true;			
 		}
 	}
 

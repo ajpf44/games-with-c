@@ -1,6 +1,7 @@
 #include "game.h"
 #include "gio/gio.h"
 #include "glib-object.h"
+#include "glib.h"
 #include <gtk-4.0/gtk/gtk.h>
 #include <stdlib.h>
 
@@ -8,8 +9,9 @@ static field_slot (*ptr_f)[8];
 
 static void reveal_slot (GtkWidget *button, field_slot* slot)
 {
-		
 	g_print("click x = %d, y = %d\n", slot->x, slot->y);
+
+	if(slot->is_revealed) return;
 	
 	if(slot->is_bomb)
 	{
@@ -42,6 +44,12 @@ static void activate (GtkApplication *app, field_slot field[][FS])
 	gtk_widget_set_valign (box, GTK_ALIGN_CENTER);
 
 	gtk_window_set_child(GTK_WINDOW(window), box);	
+
+	GtkGesture *gest;
+	gest = gtk_gesture_click_new();
+	gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(gest), 0);
+
+	// g_object_conn
 	
 	for( int i = 0; i < FS; ++i)
 	{
