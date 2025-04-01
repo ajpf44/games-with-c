@@ -31,6 +31,11 @@ static void reveal_slot (GtkWidget *button, field_slot* slot)
 	slot->is_revealed = true;
 }
 
+static void callback_func (GtkWidget *button, field_slot* slot)
+{
+	 gtk_button_set_label(GTK_BUTTON(button), "?");
+}
+
 static void activate (GtkApplication *app, field_slot field[][FS])
 {
 	GtkWidget* window;
@@ -44,12 +49,6 @@ static void activate (GtkApplication *app, field_slot field[][FS])
 	gtk_widget_set_valign (box, GTK_ALIGN_CENTER);
 
 	gtk_window_set_child(GTK_WINDOW(window), box);	
-
-	GtkGesture *gest;
-	gest = gtk_gesture_click_new();
-	gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(gest), 0);
-
-	// g_object_conn
 	
 	for( int i = 0; i < FS; ++i)
 	{
@@ -63,6 +62,20 @@ static void activate (GtkApplication *app, field_slot field[][FS])
 			button =  gtk_button_new_with_label(" ");
 			field[i][j].button = button;
 			g_signal_connect(button, "clicked", G_CALLBACK(reveal_slot), &field[i][j]);
+
+			GtkGesture *gest;
+			gest = gtk_gesture_click_new();
+			gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(gest), 0);
+
+			// g_signal_connect(gest, "released",G_CALLBACK(callback_func) , &field[i][j]);
+			g_signal_connect_object(
+				gest,
+				"released",
+				G_CALLBACK(callback_func),
+				button, G_CONNECT_SWAPPED
+				);
+			gtk_widget_add_controller(GTK_WIDGET(button), GTK_EVENT_CONTROLLER(gest));
+			
 			gtk_box_append(GTK_BOX(box_line), button);
 		}
 	}
