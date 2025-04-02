@@ -1,6 +1,6 @@
 # Defina a versão mínima do CMake e o projeto
 cmake_minimum_required(VERSION 3.10)
-project(campo_minado)
+project(minesweeper)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Find GTK package
@@ -15,11 +15,11 @@ include_directories(include)
 file(GLOB SOURCES src/*.c)
 
 # Crie o executável, passando o arquivo main.c e os arquivos da src
-add_executable(campo_minado ${SOURCES})
+add_executable(minesweeper ${SOURCES})
 
 # Compiler flags
 add_compile_options(${GTK_CFLAGS_OTHER})
 
 # Link libraries
-target_link_libraries(campo_minado ${GTK_LIBRARIES})
+target_link_libraries(minesweeper ${GTK_LIBRARIES})
 
