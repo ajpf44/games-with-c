@@ -6,11 +6,19 @@
 #include <stdlib.h>
 
 static field_slot (*ptr_f)[8];
+static gboolean is_firstclick = true;  
 
 static void reveal_slot (GtkWidget *button, field_slot* slot)
 {
 	g_print("click x = %d, y = %d\n", slot->x, slot->y);
-
+	
+	if(is_firstclick)
+	{
+		reveal_firstclick(slot, ptr_f);
+		is_firstclick = false;
+		return;
+	}
+		
 	if(slot->is_revealed) return;
 	
 	if(slot->is_bomb)
@@ -31,7 +39,7 @@ static void reveal_slot (GtkWidget *button, field_slot* slot)
 	slot->is_revealed = true;
 }
 
-static void callback_func (GtkWidget *button, field_slot* slot)
+static void w_bombflag (GtkWidget *button, field_slot* slot)
 {
 	 gtk_button_set_label(GTK_BUTTON(button), "?");
 }
@@ -67,11 +75,11 @@ static void activate (GtkApplication *app, field_slot field[][FS])
 			gest = gtk_gesture_click_new();
 			gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(gest), 0);
 
-			// g_signal_connect(gest, "released",G_CALLBACK(callback_func) , &field[i][j]);
+			// g_signal_connect(gest, "released",G_CALLBACK(w_bombflag) , &field[i][j]);
 			g_signal_connect_object(
 				gest,
 				"released",
-				G_CALLBACK(callback_func),
+				G_CALLBACK(w_bombflag),
 				button, G_CONNECT_SWAPPED
 				);
 			gtk_widget_add_controller(GTK_WIDGET(button), GTK_EVENT_CONTROLLER(gest));

@@ -15,6 +15,9 @@ typedef struct
 } field_slot;
 
 void output_field(field_slot field[][FS]);
-void init_bombs(field_slot field[][FS]);
+void init_bombs(field_slot field[][FS], int init_i, int init_j);
 void reveal_around(field_slot *slot, field_slot field[][FS]);
+void reveal_firstclick(field_slot* slot, field_slot (*ptr_f)[8]);
+void init_field(field_slot (*field)[FS]);
+
 
