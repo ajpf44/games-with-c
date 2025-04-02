@@ -3,14 +3,20 @@
 #include "glib-object.h"
 #include "glib.h"
 #include <gtk-4.0/gtk/gtk.h>
-#include <stdlib.h>
 
-static field_slot (*ptr_f)[8];
+static gboolean is_firstclick = true;  
 
 static void reveal_slot (GtkWidget *button, field_slot* slot)
 {
 	g_print("click x = %d, y = %d\n", slot->x, slot->y);
 
+	if(is_firstclick)
+	{
+		reveal_firstclick(slot);
+		is_firstclick = false;
+		return;
+	}
+		
 	if(slot->is_revealed) return;
 	
 	if(slot->is_bomb)
@@ -19,7 +25,7 @@ static void reveal_slot (GtkWidget *button, field_slot* slot)
 	}
 	else if(slot->bombs_around == 0)
 	{
-		reveal_around(slot, ptr_f);
+		reveal_around(slot);
 	}
 	else
 	{
@@ -31,7 +37,7 @@ static void reveal_slot (GtkWidget *button, field_slot* slot)
 	slot->is_revealed = true;
 }
 
-static void callback_func (GtkWidget *button, field_slot* slot)
+static void w_bombflag (GtkWidget *button, field_slot* slot)
 {
 	 gtk_button_set_label(GTK_BUTTON(button), "?");
 }
@@ -67,11 +73,11 @@ static void activate (GtkApplication *app, field_slot field[][FS])
 			gest = gtk_gesture_click_new();
 			gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(gest), 0);
 
-			// g_signal_connect(gest, "released",G_CALLBACK(callback_func) , &field[i][j]);
+			// g_signal_connect(gest, "released",G_CALLBACK(w_bombflag) , &field[i][j]);
 			g_signal_connect_object(
 				gest,
 				"released",
-				G_CALLBACK(callback_func),
+				G_CALLBACK(w_bombflag),
 				button, G_CONNECT_SWAPPED
 				);
 			gtk_widget_add_controller(GTK_WIDGET(button), GTK_EVENT_CONTROLLER(gest));
@@ -83,15 +89,9 @@ static void activate (GtkApplication *app, field_slot field[][FS])
 
 int gtk_main(int argc, char** argv, field_slot field[][FS])
 {
-	printf("sizeof field %lu\n", sizeof(field_slot)*8*8);
 	GtkApplication *app;
-	int status;
-
-	ptr_f = malloc(8 * sizeof(field_slot[8]));
-	ptr_f = field;
-
-	printf("ptr_f[0][0].bombs_around = %d\n", field[0][0].bombs_around);
-	
+	int status;	
+		
 	app = gtk_application_new ("org.gtk.example", G_APPLICATION_DEFAULT_FLAGS);
 	g_signal_connect(app, "activate", G_CALLBACK(activate), field);
 	status = g_application_run(G_APPLICATION(app), argc, argv);
