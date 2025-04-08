@@ -67,13 +67,14 @@ static void activate (GtkApplication *app, field_slot field[][FS])
 			GtkWidget* button;
 			button =  gtk_button_new_with_label(" ");
 			field[i][j].button = button;
-			g_signal_connect(button, "clicked", G_CALLBACK(reveal_slot), &field[i][j]);
+			g_signal_connect(
+				button, "clicked", G_CALLBACK(reveal_slot), &field[i][j]
+				);
 
 			GtkGesture *gest;
 			gest = gtk_gesture_click_new();
 			gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(gest), 0);
-
-			// g_signal_connect(gest, "released",G_CALLBACK(w_bombflag) , &field[i][j]);
+			
 			g_signal_connect_object(
 				gest,
 				"released",

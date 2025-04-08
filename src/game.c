@@ -16,18 +16,16 @@ void reveal_firstclick(field_slot* slot)
 
 void reveal_around(field_slot* slot)
 {
-	//reveal the value to the label button
-	// return if it's differet from 0
-	if(slot->is_revealed == false && !slot->is_bomb)
-	{	
-		slot->is_revealed = true;
-		char s[2];
-		sprintf(s, "%d", slot->bombs_around);
-		gtk_button_set_label(GTK_BUTTON(slot->button), s);
-
-		if(slot->bombs_around != 0)
-			return;
-	}
+	if(slot->is_revealed || slot->is_bomb)
+		return;
+	
+	slot->is_revealed = true;
+	char buf[2];
+	sprintf(buf, "%d", slot->bombs_around);
+	gtk_button_set_label(GTK_BUTTON(slot->button), buf);
+	
+	if(slot->bombs_around != 0)
+		return;
 
 	if(slot->x - 1 >= 0)
 		reveal_around(&mat_field[slot->x - 1][slot->y]);
@@ -64,7 +62,8 @@ void set_bombs_around()
 	{
 		for(int j = 0; j < FS; ++j)
 		{
-			if(mat_field[i][j].is_bomb) continue;
+			if(mat_field[i][j].is_bomb) 
+				continue;
 			int bombs_a = 0;
 			
 			if(i - 1 >=  0)
@@ -95,20 +94,17 @@ void set_bombs_around()
 	}
 }
 
-void init_bombs(int init_i, int init_j)
+void init_bombs(int i0, int j0)
 {
+	int par = 1;
 	for(int i = 0; i < FS; ++i)
 	{
 		srand(time(NULL)+i);
 		for(int j = 0; j < FS; ++j)
 		{
-			//WIP - THE TROUBLE IS HERE
-			if(true
-					// i > init_i +2 &&
-					// i < init_i -2 &&
-					// j > init_j +2 &&
-					// j < init_j - 2
-				)
+			int rand_par = rand()%2 + par;
+			if( i < i0 - rand_par || i > i0+rand_par ||
+					j < j0 - rand_par || j > j0+rand_par)
 			{
 				int rand_num = rand() % 5;
 				if(rand_num==0)
