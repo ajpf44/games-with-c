@@ -9,9 +9,10 @@ static field_slot mat_field[8][8];
 void reveal_firstclick(field_slot* slot)
 {
 	slot->is_bomb =false;
-
 	init_bombs( slot->x,slot->y);
 	output_field();
+
+	reveal_around(slot);
 }
 
 void reveal_around(field_slot* slot)
@@ -38,6 +39,18 @@ void reveal_around(field_slot* slot)
 	
 	if(slot->y + 1 < FS)
 		reveal_around(&mat_field[slot->x ][slot->y+1]);
+
+	if(slot->y - 1 >= 0 &&slot->x - 1 >= 0)
+		reveal_around(&mat_field[slot->x-1][slot->y-1]);
+
+	if(slot->y + 1 < FS &&slot->x - 1 >= 0)
+		reveal_around(&mat_field[slot->x-1][slot->y+1]);
+
+	if(slot->y + 1 < FS &&slot->x + 1 < FS)
+		reveal_around(&mat_field[slot->x+1][slot->y+1]);
+
+	if(slot->y - 1 >= 0 &&slot->x + 1 < FS)
+		reveal_around(&mat_field[slot->x+1][slot->y-1]);
 } 
 
 void output_field()
@@ -106,7 +119,7 @@ void init_bombs(int i0, int j0)
 			if( i < i0 - rand_par || i > i0+rand_par ||
 					j < j0 - rand_par || j > j0+rand_par)
 			{
-				int rand_num = rand() % 5;
+				int rand_num = rand() % 3;
 				if(rand_num==0)
 					mat_field[i][j].is_bomb = true;
 			}
@@ -124,6 +137,7 @@ void init_field(field_slot (**field)[FS])
 		for(int j = 0; j < FS; ++j)
 		{
 			mat_field[i][j].is_revealed = false;
+			mat_field[i][j].is_flagged = false;
 			mat_field[i][j].is_bomb = false;
 
 			mat_field[i][j].x = i;

@@ -17,11 +17,13 @@ static void reveal_slot (GtkWidget *button, field_slot* slot)
 		return;
 	}
 		
-	if(slot->is_revealed) return;
+	if(slot->is_revealed) 
+		return;
 	
 	if(slot->is_bomb)
 	{
 		gtk_button_set_label(GTK_BUTTON(button), "#");
+		g_print("You loose\n");
 	}
 	else if(slot->bombs_around == 0)
 	{
@@ -37,9 +39,17 @@ static void reveal_slot (GtkWidget *button, field_slot* slot)
 	slot->is_revealed = true;
 }
 
-static void w_bombflag (GtkWidget *button, field_slot* slot)
+static void w_bombflag (field_slot* slot)
 {
-	 gtk_button_set_label(GTK_BUTTON(button), "?");
+	if(slot->is_revealed)
+		return;
+
+	if(slot->is_flagged)	
+		gtk_button_set_label(GTK_BUTTON(slot->button), " ");
+	else
+		gtk_button_set_label(GTK_BUTTON(slot->button), "?");
+
+	slot->is_flagged = !slot->is_flagged;
 }
 
 static void activate (GtkApplication *app, field_slot field[][FS])
@@ -53,8 +63,7 @@ static void activate (GtkApplication *app, field_slot field[][FS])
 	box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
 	gtk_widget_set_halign (box, GTK_ALIGN_CENTER);
 	gtk_widget_set_valign (box, GTK_ALIGN_CENTER);
-
-	gtk_window_set_child(GTK_WINDOW(window), box);	
+	gtk_window_set_child(GTK_WINDOW(window), box);	    
 	
 	for( int i = 0; i < FS; ++i)
 	{
@@ -72,15 +81,22 @@ static void activate (GtkApplication *app, field_slot field[][FS])
 				);
 
 			GtkGesture *gest;
+			GtkGesture *gest2;
 			gest = gtk_gesture_click_new();
 			gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(gest), 0);
 			
-			g_signal_connect_object(
-				gest,
-				"released",
-				G_CALLBACK(w_bombflag),
-				button, G_CONNECT_SWAPPED
-				);
+			g_signal_connect_data (
+					gest,
+					"released",
+					G_CALLBACK(w_bombflag),
+					&field[i][j],
+					NULL,
+					G_CONNECT_SWAPPED
+					);
+		//	g_signal_connect_object(
+		//		gest, "released", G_CALLBACK(w_bombflag),
+		//		&field[i][j], G_CONNECT_SWAPPED
+		//		);
 			gtk_widget_add_controller(GTK_WIDGET(button), GTK_EVENT_CONTROLLER(gest));
 			
 			gtk_box_append(GTK_BOX(box_line), button);

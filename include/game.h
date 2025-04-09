@@ -12,6 +12,7 @@ typedef struct
 	int y;
 	bool is_bomb;
 	bool is_revealed;
+	bool is_flagged;
 } field_slot;
 
 void output_field();
