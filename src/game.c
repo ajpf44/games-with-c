@@ -39,7 +39,7 @@ void reveal_around(field_slot* slot)
 	
 	if(slot->y + 1 < FS)
 		reveal_around(&mat_field[slot->x ][slot->y+1]);
-
+		
 	if(slot->y - 1 >= 0 &&slot->x - 1 >= 0)
 		reveal_around(&mat_field[slot->x-1][slot->y-1]);
 

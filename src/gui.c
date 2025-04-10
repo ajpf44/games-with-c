@@ -3,8 +3,11 @@
 #include "glib-object.h"
 #include "glib.h"
 #include <gtk-4.0/gtk/gtk.h>
+#include <string.h>
 
 static gboolean is_firstclick = true;  
+static const char* BOMB_UNI = "\U0001F4A3";
+static const char* FLAG_UNI = "\U00002691";
 
 static void reveal_slot (GtkWidget *button, field_slot* slot)
 {
@@ -22,7 +25,7 @@ static void reveal_slot (GtkWidget *button, field_slot* slot)
 	
 	if(slot->is_bomb)
 	{
-		gtk_button_set_label(GTK_BUTTON(button), "#");
+		gtk_button_set_label(GTK_BUTTON(button), BOMB_UNI);
 		g_print("You loose\n");
 	}
 	else if(slot->bombs_around == 0)
@@ -47,24 +50,41 @@ static void w_bombflag (field_slot* slot)
 	if(slot->is_flagged)	
 		gtk_button_set_label(GTK_BUTTON(slot->button), " ");
 	else
-		gtk_button_set_label(GTK_BUTTON(slot->button), "?");
+		gtk_button_set_label(GTK_BUTTON(slot->button), FLAG_UNI);
 
 	slot->is_flagged = !slot->is_flagged;
 }
 
 static void activate (GtkApplication *app, field_slot field[][FS])
 {
-	GtkWidget* window;
+	GtkWidget *window, *box,*box_info, *tview;
+	GtkTextBuffer *buf;
+	int info_mrg = 10;
+	
 	window = gtk_application_window_new(app);
 	gtk_window_set_title(GTK_WINDOW(window), "Campo minado, de ajpf44");
 	gtk_window_present (GTK_WINDOW(window));
 	
-	GtkWidget *box;
 	box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
-	gtk_widget_set_halign (box, GTK_ALIGN_CENTER);
+	// gtk_widget_set_halign (box, GTK_ALIGN_CENTER);
 	gtk_widget_set_valign (box, GTK_ALIGN_CENTER);
-	gtk_window_set_child(GTK_WINDOW(window), box);	    
+	gtk_window_set_child(GTK_WINDOW(window), box);	
 	
+	box_info = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+	// gtk_widget_set_halign (box_info, GTK_ALIGN_CENTER);
+	gtk_widget_set_valign (box_info, GTK_ALIGN_CENTER);	    
+	gtk_widget_set_margin_top(box_info, info_mrg);
+	gtk_widget_set_margin_bottom(box_info, info_mrg);
+	gtk_widget_set_margin_start(box_info, info_mrg);
+	gtk_box_append(GTK_BOX(box), box_info);
+	
+	tview = gtk_text_view_new();
+	buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(tview));
+	// char* info_str = malloc(strlen("[0] \U0001F4A3 | "));
+	gtk_text_buffer_set_text(buf, "Ronadlo Land\n \U0001F4A3", -1);
+	gtk_widget_set_hexpand(tview, true);
+	gtk_box_append(GTK_BOX(box_info), tview);
+		
 	for( int i = 0; i < FS; ++i)
 	{
 		GtkWidget *box_line;
@@ -93,10 +113,7 @@ static void activate (GtkApplication *app, field_slot field[][FS])
 					NULL,
 					G_CONNECT_SWAPPED
 					);
-		//	g_signal_connect_object(
-		//		gest, "released", G_CALLBACK(w_bombflag),
-		//		&field[i][j], G_CONNECT_SWAPPED
-		//		);
+
 			gtk_widget_add_controller(GTK_WIDGET(button), GTK_EVENT_CONTROLLER(gest));
 			
 			gtk_box_append(GTK_BOX(box_line), button);
