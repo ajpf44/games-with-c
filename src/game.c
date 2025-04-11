@@ -5,6 +5,7 @@
 #include "gtk/gtk.h"
 
 static field_slot mat_field[8][8];
+int bombs_count = 0;
 
 void reveal_firstclick(field_slot* slot)
 {
@@ -12,6 +13,7 @@ void reveal_firstclick(field_slot* slot)
 	init_bombs( slot->x,slot->y);
 	output_field();
 
+	printf("value of bombs_count: %d\n", bombs_count);
 	reveal_around(slot);
 }
 
@@ -116,12 +118,17 @@ void init_bombs(int i0, int j0)
 		for(int j = 0; j < FS; ++j)
 		{
 			int rand_par = rand()%2 + par;
-			if( i < i0 - rand_par || i > i0+rand_par ||
-					j < j0 - rand_par || j > j0+rand_par)
+			if(
+			   i < i0 - rand_par || i > i0+rand_par
+			   ||
+			   j < j0 - rand_par || j > j0+rand_par
+			   )
 			{
 				int rand_num = rand() % 3;
-				if(rand_num==0)
-					mat_field[i][j].is_bomb = true;
+				if(rand_num==0){
+				  ++bombs_count;
+				  mat_field[i][j].is_bomb = true;
+				}
 			}
 		}
 	}
@@ -146,3 +153,7 @@ void init_field(field_slot (**field)[FS])
 	}
 }
 
+int *get_bombscount()
+{
+  return &bombs_count;
+}
