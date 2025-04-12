@@ -12,18 +12,31 @@ static const char* FLAG_UNI = "\U00002691";
 static  GtkWidget *tview;
 static int flags_count = 0;
 static void stop_gui();
+typedef enum{
+  WINNER,
+  LOSER,
+  GAME
+} game_val_t;
 
-static void update_info(bool winner)
+static void update_info(game_val_t gval)
+
 {
   char str[32];
   
   GtkTextBuffer *buf_view = gtk_text_view_get_buffer(GTK_TEXT_VIEW(tview));;
   int *bcount_ptr= get_bombscount();
-
-  if (winner)
-    sprintf(str, "YOU WIN\nCongratulations!!!");
-  else
-    sprintf(str, "INFO: [%s: %d]  -  [%s: %d]\n", BOMB_UNI, *bcount_ptr, FLAG_UNI, flags_count);
+  
+  switch(gval){
+    case WINNER:
+      sprintf(str, "YOU WIN\nCongratulations!!!");
+      break;
+    case LOSER:
+      sprintf(str, "YOU LOSE\n looooooseeeeer!!");
+     break;
+    case GAME:
+     sprintf(str, "INFO: [%s: %d]  -  [%s: %d]\n", BOMB_UNI, *bcount_ptr, FLAG_UNI, flags_count);
+     break;
+  }
 
   gtk_text_buffer_set_text(buf_view, str, -1);
 } 
@@ -38,14 +51,12 @@ static void reveal_slot (GtkWidget *button, field_slot* slot)
     is_firstclick = false;
     return;
   }
-
   if(slot->is_revealed) 
     return;
 
   if(slot->is_bomb)	{
     gtk_button_set_label(GTK_BUTTON(button), BOMB_UNI);
-    g_print("You loose\n");
-
+    update_info(LOSER);
     stop_gui(); 
   }
   else if(slot->bombs_around == 0)	{
@@ -76,7 +87,7 @@ static void put_flag (field_slot* slot){
 
   if(*get_bombscount() == flags_count && check_win()){
     stop_gui();
-    update_info(true);
+    update_info(WINNER);
   }else{
     update_info(false);
   }
@@ -94,7 +105,7 @@ static void stop_gui()
           &ptr_field[i][j]
           );
       g_signal_handlers_disconnect_by_func( 
-          ptr_field[i][j].button,
+          ptr_field[i][j].gest,
           G_CALLBACK(put_flag),
           &ptr_field[i][j]
           );
@@ -143,6 +154,7 @@ static void activate (GtkApplication *app, field_slot field[][FS])
       GtkGesture *gest;
       gest = gtk_gesture_click_new();
       gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(gest), 0);
+      field[i][j].gest = gest;
 
       //g_signal_connect(gest, "clicked", G_CALLBACK(put_flag), &field[i][j]);
       //verify if its posisble change from g_signal_connect_data to g_signal_connect

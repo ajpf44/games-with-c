@@ -7,6 +7,7 @@ static const int FS = 8;
 typedef struct 
 {
 	GtkWidget* button;
+  GtkGesture *gest;
 	int bombs_around;
 	int x;
 	int y;
