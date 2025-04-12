@@ -3,15 +3,15 @@
 #include "glib-object.h"
 #include "glib.h"
 #include <gtk-4.0/gtk/gtk.h>
-#include <string.h>
 
 static field_slot (*ptr_field)[8];
 static gboolean is_firstclick = true;  
 static const char* BOMB_UNI = "\U0001F4A3";
 static const char* FLAG_UNI = "\U00002691";
-static  GtkWidget *tview;
+static GtkWidget *tview;
 static int flags_count = 0;
 static void stop_gui();
+
 typedef enum{
   WINNER,
   LOSER,
@@ -74,6 +74,7 @@ static void reveal_slot (GtkWidget *button, field_slot* slot)
 
 
 static void put_flag (field_slot* slot){
+
   if(slot->is_revealed)
     return;
 
@@ -120,7 +121,7 @@ static void activate (GtkApplication *app, field_slot field[][FS])
   int info_mrg = 10;
 
   window = gtk_application_window_new(app);
-  gtk_window_set_title(GTK_WINDOW(window), "Campo minado, de ajpf44");
+  gtk_window_set_title(GTK_WINDOW(window), "ajpf44's minesweeper");
   gtk_window_present (GTK_WINDOW(window));
 
   box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
@@ -143,7 +144,6 @@ static void activate (GtkApplication *app, field_slot field[][FS])
   for( int i = 0; i < FS; ++i){
     GtkWidget *box_line;
     box_line = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
-
     gtk_box_append(GTK_BOX(box), box_line);
     for( int j = 0; j < FS; ++j){
       GtkWidget* button;
@@ -156,17 +156,7 @@ static void activate (GtkApplication *app, field_slot field[][FS])
       gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(gest), 0);
       field[i][j].gest = gest;
 
-      //g_signal_connect(gest, "clicked", G_CALLBACK(put_flag), &field[i][j]);
-      //verify if its posisble change from g_signal_connect_data to g_signal_connect
-      // g_signal_connect_swapped(gest, "clicked", G_CALLBACK(put_flag), &field[i][j]);
-      g_signal_connect_data (
-          gest,
-          "released",
-          G_CALLBACK(put_flag),
-          &field[i][j],
-          NULL,
-          G_CONNECT_SWAPPED
-          );
+      g_signal_connect_swapped(gest, "released", G_CALLBACK(put_flag), &field[i][j]);
 
       gtk_widget_add_controller(GTK_WIDGET(button), GTK_EVENT_CONTROLLER(gest));
 
