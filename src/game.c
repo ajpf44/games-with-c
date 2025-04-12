@@ -17,12 +17,24 @@ void reveal_firstclick(field_slot* slot)
 	reveal_around(slot);
 }
 
+bool check_win(){
+   for(int i=0; i < FS; ++i){ 
+     for(int j=0; j < FS; ++j){ 
+       if( mat_field[i][j].is_bomb 
+           && !mat_field[i][j].is_flagged)
+         return false;
+     }
+   }
+
+   return true;
+}
+
 void reveal_around(field_slot* slot)
 {
-	if(slot->is_revealed || slot->is_bomb)
-		return;
-	
-	slot->is_revealed = true;
+  if(slot->is_revealed || slot->is_bomb)
+    return;
+
+  slot->is_revealed = true;
 	char buf[2];
 	sprintf(buf, "%d", slot->bombs_around);
 	gtk_button_set_label(GTK_BUTTON(slot->button), buf);

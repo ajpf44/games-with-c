@@ -7,6 +7,6 @@ int main(int argc, char** argv)
   
   init_field(&mat_field);
   
-	int status = gtk_main(argc, argv, mat_field);
+  int status = gtk_main(argc, argv, mat_field);
   return status;
 }
