@@ -15,16 +15,15 @@ static void stop_gui();
 typedef enum{
   WINNER,
   LOSER,
-  GAME
+  GAME,
+  RESTART
 } game_val_t;
 
 static void update_info(game_val_t gval)
-
 {
   char str[32];
-  
-  GtkTextBuffer *buf_view = gtk_text_view_get_buffer(GTK_TEXT_VIEW(tview));;
   int *bcount_ptr= get_bombscount();
+  GtkTextBuffer *buf_view = gtk_text_view_get_buffer(GTK_TEXT_VIEW(tview));;
   
   switch(gval){
     case WINNER:
@@ -35,6 +34,9 @@ static void update_info(game_val_t gval)
      break;
     case GAME:
      sprintf(str, "INFO: [%s: %d]  -  [%s: %d]\n", BOMB_UNI, *bcount_ptr, FLAG_UNI, flags_count);
+     break;
+    case RESTART:
+     sprintf(str, "GAME RESTARTED\nyou can play");
      break;
   }
 
@@ -47,7 +49,7 @@ static void reveal_slot (GtkWidget *button, field_slot* slot)
 
   if(is_firstclick)	{
     reveal_firstclick(slot);
-    update_info(false);
+    update_info(GAME);
     is_firstclick = false;
     return;
   }
@@ -71,8 +73,6 @@ static void reveal_slot (GtkWidget *button, field_slot* slot)
   slot->is_revealed = true;
 }
 
-
-
 static void put_flag (field_slot* slot){
 
   if(slot->is_revealed)
@@ -86,16 +86,42 @@ static void put_flag (field_slot* slot){
     gtk_button_set_label(GTK_BUTTON(slot->button), FLAG_UNI);
   }
 
-  if(*get_bombscount() == flags_count && check_win()){
+  if(*get_bombscount() == flags_count && !is_firstclick && check_win()){
     stop_gui();
     update_info(WINNER);
   }else{
-    update_info(false);
+    update_info(GAME);
   }
 
   slot->is_flagged = !slot->is_flagged;
 }
+void restart_game()
+{
+  flags_count = 0;
+  //init_field(&ptr_field);
+  is_firstclick = true;
+  update_info(RESTART);
+  for(int i = 0; i < FS; ++i){
+    for(int j = 0; j < FS; ++j){
+      gtk_button_set_label(GTK_BUTTON(ptr_field[i][j].button), " ");
+      ptr_field[i][j].is_bomb = false;
+      ptr_field[i][j].is_revealed = false;
+      ptr_field[i][j].is_flagged = false;
 
+      g_signal_connect_swapped( 
+          ptr_field[i][j].button,
+          "clicked",
+          G_CALLBACK(reveal_slot),
+          &ptr_field[i][j]);
+      g_signal_connect_swapped( 
+          ptr_field[i][j].gest,
+          "released",
+          G_CALLBACK(put_flag),
+          &ptr_field[i][j]
+          );
+    }
+  }
+}
 static void stop_gui()
 {
   for(int i = 0; i < FS; ++i){
@@ -116,7 +142,7 @@ static void stop_gui()
 
 static void activate (GtkApplication *app, field_slot field[][FS])
 {
-  GtkWidget *window, *box,*box_info;
+  GtkWidget *window, *box,*box_info, *btn_restart;
   GtkTextBuffer *buf;
   int info_mrg = 10;
 
@@ -138,8 +164,15 @@ static void activate (GtkApplication *app, field_slot field[][FS])
   tview = gtk_text_view_new();
   buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(tview));
   gtk_text_buffer_set_text(buf, "Start the Game\n", -1);
+  gtk_text_view_set_editable (GTK_TEXT_VIEW (tview), false);
+  gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW (tview), false);
   gtk_widget_set_hexpand(tview, true);
   gtk_box_append(GTK_BOX(box_info), tview);
+
+  btn_restart = gtk_button_new_with_label("Restart");
+  g_signal_connect(btn_restart, "clicked", G_CALLBACK(restart_game),NULL);
+  gtk_box_append(GTK_BOX(box_info), btn_restart);
+   
 
   for( int i = 0; i < FS; ++i){
     GtkWidget *box_line;
@@ -147,11 +180,11 @@ static void activate (GtkApplication *app, field_slot field[][FS])
     gtk_box_append(GTK_BOX(box), box_line);
     for( int j = 0; j < FS; ++j){
       GtkWidget* button;
+      GtkGesture *gest;
       button =  gtk_button_new_with_label(" ");
       field[i][j].button = button;
       g_signal_connect(button, "clicked", G_CALLBACK(reveal_slot), &field[i][j]);
 
-      GtkGesture *gest;
       gest = gtk_gesture_click_new();
       gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(gest), 0);
       field[i][j].gest = gest;
