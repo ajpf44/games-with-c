@@ -22,7 +22,8 @@ static int flags_count = 0;
 static void stop_game();
 
 // used in switch in update_info
-typedef enum{
+typedef enum
+{
     WINNER,
     LOSER,
     GAME,
@@ -102,7 +103,7 @@ void reveal_firstclick(field_slot* slot)
 
 static void reveal_slot (GtkWidget *button, field_slot* slot)
 {
-    if(is_firstclick)	{
+    if(is_firstclick){
         reveal_firstclick(slot);
         update_info(GAME);
         is_firstclick = false;
@@ -112,13 +113,13 @@ static void reveal_slot (GtkWidget *button, field_slot* slot)
     if(slot->is_revealed) 
         return;
 
-    if(slot->is_bomb)	{
+    if(slot->is_bomb){
         gtk_button_set_label(GTK_BUTTON(button), BOMB_UNI);
         update_info(LOSER);
         stop_game(); 
-    } else if(slot->bombs_around == 0)	{
+    } else if(slot->bombs_around == 0){
         reveal_around(slot);
-    } else	{
+    } else{
         char s[2];
         sprintf(s, "%d", slot->bombs_around);
         gtk_button_set_label(GTK_BUTTON(button), s);
@@ -176,7 +177,6 @@ static void stop_game()
     for(int i = 0; i < FS; ++i){
         for(int j = 0; j < FS; ++j){
             g_signal_handlers_disconnect_by_func(f[i][j].button, G_CALLBACK(reveal_slot) ,&f[i][j]);
-
             g_signal_handlers_disconnect_by_func(f[i][j].gest, G_CALLBACK(put_flag), &f[i][j]);
         }
     } 

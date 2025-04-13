@@ -6,11 +6,11 @@
 static field_slot mat_field[8][8];
 int bombs_count = 0;
 
-bool game_check_win(){
+bool game_check_win()
+{
     for(int i=0; i < FS; ++i){ 
         for(int j=0; j < FS; ++j){ 
-            if( mat_field[i][j].is_bomb 
-                    && !mat_field[i][j].is_flagged)
+            if( mat_field[i][j].is_bomb && !mat_field[i][j].is_flagged)
                 return false;
         }
     }
