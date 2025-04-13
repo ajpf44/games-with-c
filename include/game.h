@@ -16,11 +16,10 @@ typedef struct
 	bool is_flagged;
 } field_slot;
 
-void output_field();
-void init_bombs(int init_i, int init_j);
-void reveal_around(field_slot *slot);
-void reveal_firstclick(field_slot* slot);
-void init_field(field_slot (**field)[FS]);
-void reset_slots(field_slot *f);
-int *get_bombscount();
-bool check_win();
+void game_output_field();
+void game_init_bombs(int init_i, int init_j);
+void game_reveal_firstclick(field_slot* slot);
+void game_init_field(field_slot (**field)[FS]);
+void game_reset_slots(field_slot *f);
+int *game_get_bombscount();
+bool game_check_win();

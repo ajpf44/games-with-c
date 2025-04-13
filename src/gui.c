@@ -32,7 +32,7 @@ typedef enum{
 static void update_info(game_val_t gval)
 {
     char str[32];
-    int *bcount_ptr= get_bombscount();
+    int *bcount_ptr= game_get_bombscount();
     GtkTextBuffer *buf_view = gtk_text_view_get_buffer(GTK_TEXT_VIEW(tview));;
 
     switch(gval){
@@ -52,6 +52,53 @@ static void update_info(game_val_t gval)
 
     gtk_text_buffer_set_text(buf_view, str, -1);
 } 
+
+void reveal_around(field_slot* slot)
+{
+  if(slot->is_revealed || slot->is_bomb)
+    return;
+
+  slot->is_revealed = true;
+	char buf[2];
+	sprintf(buf, "%d", slot->bombs_around);
+	gtk_button_set_label(GTK_BUTTON(slot->button), buf);
+	
+	if(slot->bombs_around != 0)
+		return;
+
+	if(slot->x - 1 >= 0)
+		reveal_around(&f[slot->x - 1][slot->y]);
+	
+	if(slot->x + 1 < FS)
+		reveal_around(&f[slot->x + 1][slot->y]);
+	
+	if(slot->y - 1 >= 0)
+		reveal_around(&f[slot->x][slot->y-1]);
+	
+	if(slot->y + 1 < FS)
+		reveal_around(&f[slot->x ][slot->y+1]);
+		
+	if(slot->y - 1 >= 0 &&slot->x - 1 >= 0)
+		reveal_around(&f[slot->x-1][slot->y-1]);
+
+	if(slot->y + 1 < FS &&slot->x - 1 >= 0)
+		reveal_around(&f[slot->x-1][slot->y+1]);
+
+	if(slot->y + 1 < FS &&slot->x + 1 < FS)
+		reveal_around(&f[slot->x+1][slot->y+1]);
+
+	if(slot->y - 1 >= 0 &&slot->x + 1 < FS)
+		reveal_around(&f[slot->x+1][slot->y-1]);
+}
+
+void reveal_firstclick(field_slot* slot)
+{
+    slot->is_bomb =false;
+    game_init_bombs( slot->x,slot->y);
+    game_output_field();
+
+    reveal_around(slot);
+}
 
 static void reveal_slot (GtkWidget *button, field_slot* slot)
 {
@@ -95,7 +142,7 @@ static void put_flag (field_slot* slot)
         slot->is_flagged = true;
     }
 
-    if(*get_bombscount() == flags_count && !is_firstclick && check_win()){
+    if(*game_get_bombscount() == flags_count && !is_firstclick && game_check_win()){
         stop_game();
         update_info(WINNER);
     }else{
@@ -107,6 +154,7 @@ void restart_game()
 {
     flags_count = 0;
     is_firstclick = true;
+    *game_get_bombscount() = 0;
 
     stop_game();
     update_info(RESTART);
@@ -114,7 +162,7 @@ void restart_game()
     for(int i = 0; i < FS; ++i){
         for(int j = 0; j < FS; ++j){
             gtk_button_set_label(GTK_BUTTON(f[i][j].button), " ");
-            reset_slots(&f[i][j]);
+            game_reset_slots(&f[i][j]);
 
             g_signal_connect(f[i][j].button,"clicked",G_CALLBACK(reveal_slot),&f[i][j]);
             g_signal_connect_swapped(f[i][j].gest,"released", G_CALLBACK(put_flag),&f[i][j]);
