@@ -21,5 +21,6 @@ void init_bombs(int init_i, int init_j);
 void reveal_around(field_slot *slot);
 void reveal_firstclick(field_slot* slot);
 void init_field(field_slot (**field)[FS]);
+void reset_slots(field_slot *f);
 int *get_bombscount();
 bool check_win();

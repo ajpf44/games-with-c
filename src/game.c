@@ -10,10 +10,13 @@ int bombs_count = 0;
 void reveal_firstclick(field_slot* slot)
 {
 	slot->is_bomb =false;
+  bombs_count = 0;
 	init_bombs( slot->x,slot->y);
 	output_field();
-
+  
+  puts("reveal_firstclick debug");
 	printf("value of bombs_count: %d\n", bombs_count);
+	printf(" slot->x : %d, slot->y: %d\n", slot->x, slot->y);
 	reveal_around(slot);
 }
 
@@ -147,6 +150,13 @@ void init_bombs(int i0, int j0)
 
 	set_bombs_around();
 }
+void reset_slots(field_slot *f)
+{
+  f->is_bomb = false;
+  f->is_revealed = false;
+  f->is_flagged = false;
+  f->bombs_around = 0;
+}
 
 void init_field(field_slot (**field)[FS])
 {
@@ -155,9 +165,7 @@ void init_field(field_slot (**field)[FS])
 	{
 		for(int j = 0; j < FS; ++j)
 		{
-			mat_field[i][j].is_revealed = false;
-			mat_field[i][j].is_flagged = false;
-			mat_field[i][j].is_bomb = false;
+      reset_slots(&mat_field[i][j]);
 
 			mat_field[i][j].x = i;
 			mat_field[i][j].y = j;
@@ -169,3 +177,5 @@ int *get_bombscount()
 {
   return &bombs_count;
 }
+
+
