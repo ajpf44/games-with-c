@@ -82,9 +82,15 @@ void game_init_bombs(int i0, int j0)
         {
             int rand_par = rand()%2 + par;
             if(
-                    i < i0 - rand_par || i > i0+rand_par
+                    (i < i0 - rand_par || i > i0+rand_par
                     ||
-                    j < j0 - rand_par || j > j0+rand_par
+                    j < j0 - rand_par || j > j0+rand_par)
+
+                    // do not spawn bombs on corners, because its impossible to preview them in game
+                    && ( i != 0 && j != 0)
+                    && ( i != 0 && j != FS)
+                    && ( i != FS && j != 0)
+                    && ( i != FS && j != FS)
               )
             {
                 int rand_num = rand() % 3;

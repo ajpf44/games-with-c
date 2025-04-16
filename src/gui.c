@@ -3,15 +3,18 @@
 #include "glib-object.h"
 #include "glib.h"
 #include <gtk-4.0/gtk/gtk.h>
-
+#include "debug.h"
 // stores all data from each slot of the game
 static field_slot (*f)[8];
 
 static gboolean is_firstclick = true;  
 
 // unicodes for the bombs and flag
-static const char* BOMB_UNI = "\U0001F4A3";
-static const char* FLAG_UNI = "\U00002691";
+static char* BOMB_UNI = "\U0001F4A3";
+static char* FLAG_UNI = "\U00002691";
+
+// need to get back in direcoty because usually it builds from dir /build
+static const char* css_path = "../src/gui.css";
 
 // text view used to display info on the screen
 // how many bombs are, how many flags and if you have lose or win
@@ -54,42 +57,40 @@ static void update_info(game_val_t gval)
     gtk_text_buffer_set_text(buf_view, str, -1);
 } 
 
+static void reveal_slot(field_slot *slot, const char* str)
+{
+    slot->is_revealed = true;
+    gtk_button_set_label(GTK_BUTTON(slot->button), str);
+
+    if(slot->is_bomb) {
+        gtk_widget_add_css_class(slot->button, "bomb");
+        return;
+    }
+        
+    char css_class[16];
+    sprintf(css_class, "bombs_around_%d", slot->bombs_around);
+    gtk_widget_add_css_class(slot->button, css_class);
+}
+
 void reveal_around(field_slot* slot)
 {
-  if(slot->is_revealed || slot->is_bomb)
-    return;
+    debug_slot(slot);
+    if(slot->is_revealed || slot->is_bomb)
+        return;
 
-  slot->is_revealed = true;
-	char buf[2];
-	sprintf(buf, "%d", slot->bombs_around);
-	gtk_button_set_label(GTK_BUTTON(slot->button), buf);
-	
-	if(slot->bombs_around != 0)
-		return;
+    char bombsaround_str[2];
+    sprintf(bombsaround_str, "%d", slot->bombs_around);
+    reveal_slot(slot, bombsaround_str);
 
-	if(slot->x - 1 >= 0)
-		reveal_around(&f[slot->x - 1][slot->y]);
-	
-	if(slot->x + 1 < FS)
-		reveal_around(&f[slot->x + 1][slot->y]);
-	
-	if(slot->y - 1 >= 0)
-		reveal_around(&f[slot->x][slot->y-1]);
-	
-	if(slot->y + 1 < FS)
-		reveal_around(&f[slot->x ][slot->y+1]);
-		
-	if(slot->y - 1 >= 0 &&slot->x - 1 >= 0)
-		reveal_around(&f[slot->x-1][slot->y-1]);
+    if(slot->bombs_around != 0)
+        return;
 
-	if(slot->y + 1 < FS &&slot->x - 1 >= 0)
-		reveal_around(&f[slot->x-1][slot->y+1]);
-
-	if(slot->y + 1 < FS &&slot->x + 1 < FS)
-		reveal_around(&f[slot->x+1][slot->y+1]);
-
-	if(slot->y - 1 >= 0 &&slot->x + 1 < FS)
-		reveal_around(&f[slot->x+1][slot->y-1]);
+    for(int i=-1 ; i < 2; ++i){
+        for(int j=-1 ; j < 2; ++j){
+            if(slot->x + i >= 0 && slot->x + i < FS && slot->y + j >= 0 && slot->y + j < FS)
+                reveal_around(&f[slot->x +i][slot->y + j]);
+        }
+    }
 }
 
 void reveal_firstclick(field_slot* slot)
@@ -98,10 +99,12 @@ void reveal_firstclick(field_slot* slot)
     game_init_bombs( slot->x,slot->y);
     game_output_field();
 
+    debug_str("aqui");
     reveal_around(slot);
+    debug_str("chegou aqui");
 }
 
-static void reveal_slot (GtkWidget *button, field_slot* slot)
+static void handles_reveal (GtkWidget *button, field_slot* slot)
 {
     if(is_firstclick){
         reveal_firstclick(slot);
@@ -114,7 +117,7 @@ static void reveal_slot (GtkWidget *button, field_slot* slot)
         return;
 
     if(slot->is_bomb){
-        gtk_button_set_label(GTK_BUTTON(button), BOMB_UNI);
+        reveal_slot(slot, BOMB_UNI);
         update_info(LOSER);
         stop_game(); 
     } else if(slot->bombs_around == 0){
@@ -123,9 +126,8 @@ static void reveal_slot (GtkWidget *button, field_slot* slot)
         char s[2];
         sprintf(s, "%d", slot->bombs_around);
         gtk_button_set_label(GTK_BUTTON(button), s);
+        reveal_slot(slot, s);
     }
-
-    slot->is_revealed = true;
 }
 
 static void put_flag (field_slot* slot)
@@ -165,7 +167,10 @@ void restart_game()
             gtk_button_set_label(GTK_BUTTON(f[i][j].button), " ");
             game_reset_slots(&f[i][j]);
 
-            g_signal_connect(f[i][j].button,"clicked",G_CALLBACK(reveal_slot),&f[i][j]);
+            gtk_widget_set_css_classes(f[i][j].button, NULL);
+            gtk_widget_add_css_class(f[i][j].button, "btn_slot");
+
+            g_signal_connect(f[i][j].button,"clicked",G_CALLBACK(handles_reveal),&f[i][j]);
             g_signal_connect_swapped(f[i][j].gest,"released", G_CALLBACK(put_flag),&f[i][j]);
         }
     }
@@ -176,7 +181,7 @@ static void stop_game()
 {
     for(int i = 0; i < FS; ++i){
         for(int j = 0; j < FS; ++j){
-            g_signal_handlers_disconnect_by_func(f[i][j].button, G_CALLBACK(reveal_slot) ,&f[i][j]);
+            g_signal_handlers_disconnect_by_func(f[i][j].button, G_CALLBACK(handles_reveal) ,&f[i][j]);
             g_signal_handlers_disconnect_by_func(f[i][j].gest, G_CALLBACK(put_flag), &f[i][j]);
         }
     } 
@@ -190,8 +195,10 @@ static void append_slots(GtkWidget* box_btns)
         gtk_box_append(GTK_BOX(box_btns), line_container);
 
         for( int j = 0; j < FS; ++j){
-            GtkWidget* button;
+            GtkWidget *button;
             GtkGesture *gest;
+
+            gtk_widget_add_css_class(button, "btn-slot");
 
             button =  gtk_button_new_with_label(" ");
             f[i][j].button = button;
@@ -200,19 +207,39 @@ static void append_slots(GtkWidget* box_btns)
             gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(gest), 3);
             f[i][j].gest = gest;
 
-            g_signal_connect(button,"clicked", G_CALLBACK(reveal_slot), &f[i][j]);
-
+            g_signal_connect(button,"clicked", G_CALLBACK(handles_reveal), &f[i][j]);
             g_signal_connect_swapped(gest, "released", G_CALLBACK(put_flag), &f[i][j]);
 
             gtk_widget_add_controller(GTK_WIDGET(button), GTK_EVENT_CONTROLLER(gest));
+
+            gtk_widget_set_css_classes(button, NULL);
+            gtk_widget_add_css_class(button, "btn_slot");
 
             gtk_box_append(GTK_BOX(line_container), button);
         }
     }
 }
+static void gui_set_cssprovider()
+{
+    GtkCssProvider* css_provider = gtk_css_provider_new();
+    gtk_css_provider_load_from_path(GTK_CSS_PROVIDER(css_provider), css_path);
+    GdkDisplay* display = gdk_display_get_default();
+    gtk_style_context_add_provider_for_display(
+            display,
+            GTK_STYLE_PROVIDER(css_provider),
+            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION
+            );
+}
+
+static void debug_func(){
+    puts("\n### pritnign field");
+    game_output_field();
+    puts("############################\n");
+}
 
 static void activate (GtkApplication *app, field_slot field[][FS])
 {
+    gui_set_cssprovider();
     GtkWidget *window, *box_btns,*box_info, *btn_restart;
     GtkTextBuffer *buf;
     int info_mrg = 10;
@@ -220,7 +247,8 @@ static void activate (GtkApplication *app, field_slot field[][FS])
     window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "ajpf44's minesweeper");
     gtk_window_present (GTK_WINDOW(window));
-    
+    gtk_window_set_default_size(GTK_WINDOW(window), 400,400);
+
     // game container, that contain the buttons
     box_btns = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
     gtk_widget_set_valign (box_btns, GTK_ALIGN_CENTER);
@@ -242,21 +270,30 @@ static void activate (GtkApplication *app, field_slot field[][FS])
     gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW (tview), false);
     gtk_widget_set_hexpand(tview, true);
     gtk_box_append(GTK_BOX(box_info), tview);
-    
+    gtk_widget_add_css_class(tview, "tview");
+
     //btn to restart the game
     btn_restart = gtk_button_new_with_label("Restart");
     g_signal_connect(btn_restart, "clicked", G_CALLBACK(restart_game),NULL);
     gtk_box_append(GTK_BOX(box_info), btn_restart);
+    
+    //btn to restart the game
+    GtkWidget* btn_debug;
+    btn_debug = gtk_button_new_with_label("debug");
+    g_signal_connect(btn_debug, "clicked", G_CALLBACK(debug_func),NULL);
+    gtk_box_append(GTK_BOX(box_info), btn_debug);
 
     // add each slot as a button on box_btns
     append_slots(box_btns);
+    gtk_widget_add_css_class(box_btns, "box");
+//
 }
 
 int gtk_main(int argc, char** argv, field_slot field[][FS])
 {
     GtkApplication *app;
     int status;	
-    
+
     f = field;
 
     app = gtk_application_new ("org.gtk.example", G_APPLICATION_DEFAULT_FLAGS);

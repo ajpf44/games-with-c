@@ -1,0 +1,15 @@
+.tview{color: black; background-color: white;}
+
+.btn_slot{
+    font-size: 20px;
+    min-width: 30px;
+    min-height: 30px;
+    padding: 6px;
+}
+
+.bomb{color: black; font-size: 18px}
+.flag{color: red;}
+.bombs_around_1{color: blue;}
+.bombs_around_2{color: green;}
+.bombs_around_3{color: purple;}
+.bombs_around_4{color: red;}
