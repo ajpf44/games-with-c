@@ -93,7 +93,7 @@ void game_init_bombs(int i0, int j0)
                     && ( i != FS && j != FS)
               )
             {
-                int rand_num = rand() % 3;
+                int rand_num = rand() % 4;
                 if(rand_num==0){
                     ++bombs_count;
                     mat_field[i][j].is_bomb = true;

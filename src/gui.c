@@ -61,6 +61,7 @@ static void reveal_slot(field_slot *slot, const char* str)
 {
     slot->is_revealed = true;
     gtk_button_set_label(GTK_BUTTON(slot->button), str);
+    gtk_widget_add_css_class(slot->button, "slot_revealed");
 
     if(slot->is_bomb) {
         gtk_widget_add_css_class(slot->button, "bomb");
@@ -187,12 +188,12 @@ static void stop_game()
     } 
 }
 
-static void append_slots(GtkWidget* box_btns)
+static void append_slots(GtkWidget* box_container)
 {
     for( int i = 0; i < FS; ++i){
         GtkWidget *line_container;
         line_container = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
-        gtk_box_append(GTK_BOX(box_btns), line_container);
+        gtk_box_append(GTK_BOX(box_container), line_container);
 
         for( int j = 0; j < FS; ++j){
             GtkWidget *button;
@@ -240,7 +241,7 @@ static void debug_func(){
 static void activate (GtkApplication *app, field_slot field[][FS])
 {
     gui_set_cssprovider();
-    GtkWidget *window, *box_btns,*box_info, *btn_restart;
+    GtkWidget *window, *box_container,*box_info, *btn_restart;
     GtkTextBuffer *buf;
     int info_mrg = 10;
 
@@ -250,17 +251,18 @@ static void activate (GtkApplication *app, field_slot field[][FS])
     gtk_window_set_default_size(GTK_WINDOW(window), 400,400);
 
     // game container, that contain the buttons
-    box_btns = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
-    gtk_widget_set_valign (box_btns, GTK_ALIGN_CENTER);
-    gtk_window_set_child(GTK_WINDOW(window), box_btns);	
-
+    box_container = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+    gtk_widget_set_valign (box_container, GTK_ALIGN_CENTER);
+    gtk_widget_set_halign (box_container, GTK_ALIGN_CENTER);
+    gtk_window_set_child(GTK_WINDOW(window), box_container);
+    
     // container for information
     box_info = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
     gtk_widget_set_valign (box_info, GTK_ALIGN_CENTER);	    
     gtk_widget_set_margin_top(box_info, info_mrg);
     gtk_widget_set_margin_bottom(box_info, info_mrg);
     gtk_widget_set_margin_start(box_info, info_mrg);
-    gtk_box_append(GTK_BOX(box_btns), box_info);
+    gtk_box_append(GTK_BOX(box_container), box_info);
 
     // render the text on box_info
     tview = gtk_text_view_new();
@@ -283,10 +285,8 @@ static void activate (GtkApplication *app, field_slot field[][FS])
     g_signal_connect(btn_debug, "clicked", G_CALLBACK(debug_func),NULL);
     gtk_box_append(GTK_BOX(box_info), btn_debug);
 
-    // add each slot as a button on box_btns
-    append_slots(box_btns);
-    gtk_widget_add_css_class(box_btns, "box");
-//
+    // add each slot as a button on box_container
+    append_slots(box_container);
 }
 
 int gtk_main(int argc, char** argv, field_slot field[][FS])
