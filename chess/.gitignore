@@ -1,0 +1,22 @@
+# Ignore build directories
+/build/
+/bin/
+
+/# Ignore CMake files
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+compile_commands.json
+
+# Ignore log files
+*.log
+
+# Ignore compiled object files and executables
+*.o
+*.obj
+*.a
+*.out
+*.exe
+
+.cache/
